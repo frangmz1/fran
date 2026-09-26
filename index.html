@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sun Hills Valley 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;800&family=Barlow:wght@400;500;600&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --navy: #0d1b2c;
+    --panel: rgba(13, 27, 44, 0.74);
+    --line: rgba(159, 176, 194, 0.28);
+    --ink: #eef2f6;
+    --muted: #a6b6c7;
+    --blue: #1f8fd0;
+    --yellow: #f2b21b;
+    --display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
+    --body: "Barlow", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  html, body { height: 100%; margin: 0; overflow: hidden; background: var(--navy); color: var(--ink); font: 15px/1.45 var(--body); }
+  #app, #app canvas { position: fixed; inset: 0; display: block; width: 100%; height: 100%; }
+  [hidden] { display: none !important; }
+  kbd {
+    display: inline-block; min-width: 1.6em; padding: 0.05em 0.4em; text-align: center;
+    font: 600 0.8rem/1.4 var(--display); letter-spacing: 0.04em;
+    color: var(--navy); background: var(--ink); border-radius: 4px; box-shadow: 0 2px 0 #7d8b99;
+  }
+
+  /* Pantalla de inicio */
+  #overlay {
+    position: fixed; inset: 0; z-index: 10; display: flex; align-items: center;
+    padding-inline: max(16px, 6vw);
+    background: linear-gradient(90deg, rgba(13,27,44,0.94) 0%, rgba(13,27,44,0.78) 42%, rgba(13,27,44,0.1) 80%);
+  }
+  .card { max-width: 34rem; display: grid; gap: 1.1rem; }
+  .eyebrow {
+    font: 600 0.85rem/1 var(--display); letter-spacing: 0.22em; text-transform: uppercase; color: var(--yellow);
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+  .eyebrow::before { content: ""; width: 2.2rem; height: 3px; background: var(--yellow); transform: skewX(-20deg); }
+  h1 {
+    margin: 0; font: 800 clamp(3rem, 9vw, 6.2rem)/0.86 var(--display); letter-spacing: -0.01em;
+    text-transform: uppercase; text-wrap: balance;
+  }
+  h1 span { color: var(--blue); font-style: italic; }
+  .lede { margin: 0; color: var(--muted); max-width: 30rem; }
+  .keys { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.45rem 1.2rem; margin: 0; padding: 0; list-style: none; font-size: 0.9rem; }
+  .keys li { display: flex; align-items: center; gap: 0.5rem; }
+  .touch-note { color: var(--muted); font-size: 0.9rem; margin: 0; }
+  button.primary {
+    justify-self: start; border: 0; cursor: pointer; padding: 0.8rem 1.6rem;
+    font: 800 1.15rem/1 var(--display); letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--navy); background: var(--yellow); clip-path: polygon(0 0, 100% 0, 94% 100%, 0 100%);
+    transition: transform 0.15s ease;
+  }
+  button.primary:hover { transform: translateX(3px); }
+  button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+  #load { display: flex; align-items: center; gap: 0.7rem; color: var(--muted); font: 500 1rem var(--display); letter-spacing: 0.06em; text-transform: uppercase; }
+  #load::before { content: ""; width: 14px; height: 14px; border: 2px solid var(--yellow); border-right-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* HUD */
+  #hud { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+  .zonecard {
+    position: absolute; left: 16px; top: calc(16px + env(safe-area-inset-top, 0px));
+    padding: 0.55rem 0.9rem 0.6rem; background: var(--panel); border-left: 4px solid var(--yellow);
+    backdrop-filter: blur(6px); max-width: calc(100vw - 32px - 150px);
+  }
+  #zone { font: 700 1.3rem/1.1 var(--display); letter-spacing: 0.02em; text-transform: uppercase; }
+  .meta { display: flex; gap: 0.9rem; margin-top: 0.2rem; font: 500 0.85rem/1 var(--display); letter-spacing: 0.06em; color: var(--muted); font-variant-numeric: tabular-nums; }
+  #minimap {
+    position: absolute; right: 16px; top: calc(16px + env(safe-area-inset-top, 0px));
+    width: 180px; height: 180px; border-radius: 50%; border: 3px solid var(--panel);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 18px rgba(0,0,0,0.35); pointer-events: auto; cursor: pointer; background: #7d7560;
+  }
+  #minimap.big { width: min(78vmin, 640px); height: min(78vmin, 640px); border-radius: 6px; right: 50%; top: 50%; transform: translate(50%, -50%); }
+  #help {
+    position: absolute; left: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    padding: 0.6rem 0.8rem; background: var(--panel); font-size: 0.82rem; color: var(--muted);
+    display: grid; gap: 0.3rem;
+  }
+  #help b { color: var(--ink); font-weight: 600; }
+  #hint-lock {
+    position: absolute; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+    padding: 0.45rem 0.9rem; background: var(--panel); font: 600 0.95rem var(--display); letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .crosshair { position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: rgba(255,255,255,0.8); box-shadow: 0 0 0 1px rgba(0,0,0,0.35); }
+
+  /* Controles táctiles */
+  #touch { position: fixed; inset: 0; z-index: 6; touch-action: none; }
+  #stick { position: absolute; width: 100px; height: 100px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.35); background: rgba(13,27,44,0.3); opacity: 0; }
+  #stick.on { opacity: 1; }
+  #knob { position: absolute; left: 30px; top: 30px; width: 40px; height: 40px; border-radius: 50%; background: rgba(242,178,27,0.85); }
+  .tbtns { position: absolute; right: 16px; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 10px; }
+  .tbtns button {
+    width: 64px; height: 64px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4);
+    background: var(--panel); color: var(--ink); font: 700 0.85rem var(--display); letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .tbtns button[aria-pressed="true"] { background: var(--yellow); color: var(--navy); }
+
+  @media (max-width: 640px) {
+    #minimap { width: 120px; height: 120px; }
+    .zonecard { max-width: calc(100vw - 32px - 132px); }
+    #zone { font-size: 1.05rem; }
+    #help { display: none; }
+    #overlay { background: linear-gradient(180deg, rgba(13,27,44,0.92) 0%, rgba(13,27,44,0.82) 70%, rgba(13,27,44,0.5) 100%); }
+    .keys { display: none; }
+  }
+  @media (pointer: coarse) { .keys, #help { display: none; } }
+  @media (pointer: fine) { .touch-note { display: none; } }
+  @media (prefers-reduced-motion: reduce) { #load::before { animation: none; } button.primary { transition: none; } }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<section id="overlay" aria-label="Inicio">
+  <div class="card">
+    <div class="eyebrow">Carretera QRO 20 · Querétaro</div>
+    <h1>Sun Hills <span>Valley</span></h1>
+    <p class="lede">Recorre el campus completo: el edificio de salones, el patio con las canchas azules, la entrada de la punta amarilla y el camino de terracería que sube a las canchas de los Centurions.</p>
+    <ul class="keys">
+      <li><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Caminar</li>
+      <li><kbd>Shift</kbd> Correr</li>
+      <li><kbd>Espacio</kbd> Saltar</li>
+      <li><kbd>V</kbd> Volar · <kbd>E</kbd><kbd>Q</kbd> altura</li>
+      <li><kbd>M</kbd> Mapa grande</li>
+      <li><kbd>R</kbd> Volver al patio</li>
+    </ul>
+    <p class="touch-note">En celular: arrastra el lado izquierdo para caminar y el derecho para mirar.</p>
+    <div id="load"><span id="load-status">Preparando…</span></div>
+    <button id="enter" class="primary" hidden>Entrar al campus</button>
+  </div>
+</section>
+
+<div id="hud" hidden>
+  <div class="crosshair"></div>
+  <div class="zonecard">
+    <div id="zone">Patio</div>
+    <div class="meta"><span id="alt">+0.0 m</span><span id="compass">N 000°</span></div>
+  </div>
+  <canvas id="minimap" width="360" height="360" aria-label="Minimapa"></canvas>
+  <div id="help">
+    <div><b>WASD</b> caminar · <b>Shift</b> correr · <b>Espacio</b> saltar</div>
+    <div><b>V</b> volar · <b>M</b> mapa · <b>R</b> volver · <b>H</b> ocultar ayuda</div>
+  </div>
+  <div id="hint-lock" hidden>Haz clic para mirar con el mouse · Esc para soltar</div>
+</div>
+
+<div id="touch" hidden>
+  <div id="stick"><div id="knob"></div></div>
+  <div class="tbtns">
+    <button id="btn-fly" aria-pressed="false">Volar</button>
+    <button id="btn-run" aria-pressed="false">Correr</button>
+    <button id="btn-jump">Saltar</button>
+  </div>
+</div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
