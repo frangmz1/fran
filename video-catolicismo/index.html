@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>De Adán a hoy</title>
+<style>
+@font-face{font-family:M;font-weight:600;src:url(node_modules/@fontsource/montserrat/files/montserrat-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:M;font-weight:700;src:url(node_modules/@fontsource/montserrat/files/montserrat-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:M;font-weight:800;src:url(node_modules/@fontsource/montserrat/files/montserrat-latin-800-normal.woff2) format('woff2')}
+@font-face{font-family:M;font-weight:900;src:url(node_modules/@fontsource/montserrat/files/montserrat-latin-900-normal.woff2) format('woff2')}
+html,body{margin:0;background:#05070f;overflow:hidden;font-family:M,sans-serif}
+#stage{position:relative;width:1920px;height:1080px;overflow:hidden;background:#0A1230;transform-origin:0 0}
+#svg{position:absolute;left:0;top:0;width:1920px;height:1080px}
+#shade{position:absolute;left:0;right:0;bottom:0;height:380px;background:linear-gradient(rgba(4,8,24,0),rgba(4,8,24,.62));opacity:0}
+.cap{position:absolute;left:50%;bottom:86px;width:1560px;margin-left:-780px;text-align:center;color:#FFF7EA;font-weight:700;font-size:47px;line-height:1.3;text-shadow:0 2px 3px rgba(0,0,0,.35),0 6px 26px rgba(4,8,24,.7);display:none}
+.cap .w{display:inline-block}
+.cap .hl{color:#FFC94D}
+.cap.hero{bottom:auto;top:388px;font-size:124px;font-weight:900;letter-spacing:6px;line-height:1.05;text-shadow:0 8px 50px rgba(4,8,24,.8)}
+.cap.heroSub{bottom:auto;top:548px;font-size:40px;font-weight:600;letter-spacing:5px;color:#FFD98A}
+.cap.heroTiny{bottom:auto;top:612px;font-size:25px;font-weight:700;letter-spacing:9px;color:rgba(255,247,234,.75)}
+.cap.shout{bottom:auto;top:440px;font-size:110px;font-weight:900;letter-spacing:3px}
+.cap.end{bottom:auto;top:560px;font-size:62px;font-weight:800;line-height:1.25;width:1500px;margin-left:-750px}
+#chipbg{position:absolute;left:0;top:0;width:820px;height:280px;background:radial-gradient(ellipse at 0 0,rgba(4,8,24,.55),rgba(4,8,24,0) 70%);opacity:0}
+#chip{position:absolute;left:70px;top:60px;display:flex;align-items:center;gap:20px;opacity:0}
+#chip .num{width:66px;height:66px;border-radius:50%;background:#F5B83D;color:#0E1A3A;font-weight:900;font-size:27px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(0,0,0,.35)}
+#chip .ttl{color:#fff;font-weight:800;font-size:29px;letter-spacing:4px;text-shadow:0 3px 14px rgba(0,0,0,.5)}
+#chip .yr{color:#FFD98A;font-weight:600;font-size:21px;letter-spacing:2px;margin-top:3px;text-shadow:0 3px 14px rgba(0,0,0,.5)}
+#dots{position:absolute;left:72px;top:148px;display:flex;gap:7px;opacity:0}
+#dots i{width:24px;height:5px;border-radius:3px;background:rgba(255,255,255,.3)}
+#dots i.on{background:#F5B83D}
+#ui{position:fixed;left:0;right:0;bottom:0;display:flex;gap:12px;align-items:center;padding:10px 16px;background:#111a;color:#fff;font:14px sans-serif}
+#ui input{flex:1}
+body.render #ui{display:none}
+</style>
+</head>
+<body>
+<div id="stage">
+  <svg id="svg" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg"></svg>
+  <div id="shade"></div>
+  <div id="caps"></div>
+  <div id="chipbg"></div>
+  <div id="chip"><div class="num"></div><div><div class="ttl"></div><div class="yr"></div></div></div>
+  <div id="dots"></div>
+</div>
+<div id="ui"><button id="play">▶</button><input id="scrub" type="range" min="0" max="180" step="0.01" value="0"><span id="time">0.0</span></div>
+<script src="src/lib.js"></script>
+<script src="src/figures.js"></script>
+<script src="src/scenes-a.js"></script>
+<script src="src/scenes-b.js"></script>
+<script src="src/scenes-c.js"></script>
+<script src="src/main.js"></script>
+</body>
+</html>
