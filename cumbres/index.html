@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cumbres del Lago 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;800&family=Barlow:wght@400;500;600&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --navy: #0d1b2c;
+    --panel: rgba(13, 27, 44, 0.74);
+    --line: rgba(159, 176, 194, 0.28);
+    --ink: #eef2f6;
+    --muted: #a6b6c7;
+    --lake: #4fa3c7;
+    --yellow: #f2b21b;
+    --jacaranda: #a58bdb;
+    --display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
+    --body: "Barlow", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  html, body { height: 100%; margin: 0; overflow: hidden; background: var(--navy); color: var(--ink); font: 15px/1.45 var(--body); }
+  #app, #app canvas { position: fixed; inset: 0; display: block; width: 100%; height: 100%; }
+  [hidden] { display: none !important; }
+  kbd {
+    display: inline-block; min-width: 1.6em; padding: 0.05em 0.4em; text-align: center;
+    font: 600 0.8rem/1.4 var(--display); letter-spacing: 0.04em;
+    color: var(--navy); background: var(--ink); border-radius: 4px; box-shadow: 0 2px 0 #7d8b99;
+  }
+
+  /* Pantalla de inicio */
+  #overlay {
+    position: fixed; inset: 0; z-index: 10; display: flex; align-items: center;
+    padding-inline: max(16px, 6vw);
+    background: linear-gradient(90deg, rgba(13,27,44,0.94) 0%, rgba(13,27,44,0.8) 44%, rgba(13,27,44,0.08) 82%);
+  }
+  .card { max-width: 36rem; display: grid; gap: 1.1rem; }
+  .eyebrow {
+    font: 600 0.85rem/1 var(--display); letter-spacing: 0.22em; text-transform: uppercase; color: var(--yellow);
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+  .eyebrow::before { content: ""; width: 2.2rem; height: 3px; background: var(--yellow); transform: skewX(-20deg); }
+  h1 {
+    margin: 0; font: 800 clamp(3rem, 9vw, 6.2rem)/0.86 var(--display); letter-spacing: -0.01em;
+    text-transform: uppercase; text-wrap: balance;
+  }
+  h1 span { color: var(--lake); font-style: italic; }
+  .lede { margin: 0; color: var(--muted); max-width: 32rem; }
+  .lede b { color: var(--ink); font-weight: 600; }
+  .keys { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.45rem 1.2rem; margin: 0; padding: 0; list-style: none; font-size: 0.9rem; }
+  .keys li { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
+  .keys li span { margin-left: 0.2rem; }
+  .touch-note { color: var(--muted); font-size: 0.9rem; margin: 0; }
+  button.primary {
+    justify-self: start; border: 0; cursor: pointer; padding: 0.8rem 1.6rem;
+    font: 800 1.15rem/1 var(--display); letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--navy); background: var(--yellow); clip-path: polygon(0 0, 100% 0, 94% 100%, 0 100%);
+    transition: transform 0.15s ease;
+  }
+  button.primary:hover { transform: translateX(3px); }
+  button:focus-visible { outline: 3px solid var(--lake); outline-offset: 3px; }
+  #load { display: flex; align-items: center; gap: 0.7rem; color: var(--muted); font: 500 1rem var(--display); letter-spacing: 0.06em; text-transform: uppercase; }
+  #load::before { content: ""; flex: none; width: 14px; height: 14px; border: 2px solid var(--yellow); border-right-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .fuente { margin: 0; font-size: 0.75rem; color: rgba(166,182,199,0.75); }
+
+  /* HUD */
+  #hud { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+  .zonecard {
+    position: absolute; left: 16px; top: calc(16px + env(safe-area-inset-top, 0px));
+    padding: 0.55rem 0.9rem 0.6rem; background: var(--panel); border-left: 4px solid var(--jacaranda);
+    backdrop-filter: blur(6px); max-width: calc(100vw - 32px - 200px);
+  }
+  #calle { font: 700 1.3rem/1.1 var(--display); letter-spacing: 0.02em; text-transform: uppercase; }
+  #zona { font: 500 0.85rem/1.2 var(--display); letter-spacing: 0.06em; color: var(--ink); opacity: 0.85; margin-top: 0.15rem; }
+  .meta { display: flex; gap: 0.9rem; margin-top: 0.2rem; font: 500 0.85rem/1 var(--display); letter-spacing: 0.06em; color: var(--muted); font-variant-numeric: tabular-nums; }
+  #minimap {
+    position: absolute; right: 16px; top: calc(16px + env(safe-area-inset-top, 0px));
+    width: 180px; height: 180px; border-radius: 50%; border: 3px solid var(--panel);
+    box-shadow: 0 0 0 1px var(--line), 0 6px 18px rgba(0,0,0,0.35); pointer-events: auto; cursor: pointer; background: #b7ab8c;
+  }
+  #minimap.big { width: min(84vmin, 720px); height: min(84vmin, 720px); border-radius: 6px; right: 50%; top: 50%; transform: translate(50%, -50%); }
+  #vel {
+    position: absolute; right: 24px; bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    display: flex; align-items: baseline; gap: 0.35rem; padding: 0.3rem 0.9rem 0.4rem;
+    background: var(--panel); border-bottom: 4px solid var(--yellow);
+  }
+  #vel-num { font: 800 3rem/1 var(--display); font-variant-numeric: tabular-nums; min-width: 2.2ch; text-align: right; }
+  #vel small { font: 600 0.9rem var(--display); letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; }
+  #aviso {
+    position: absolute; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+    padding: 0.5rem 1rem; background: var(--panel); font: 600 1.05rem var(--display); letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap;
+  }
+  #help {
+    position: absolute; left: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    padding: 0.6rem 0.8rem; background: var(--panel); font-size: 0.82rem; color: var(--muted);
+    display: grid; gap: 0.3rem;
+  }
+  #help b { color: var(--ink); font-weight: 600; }
+  #hint-lock {
+    position: absolute; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+    padding: 0.45rem 0.9rem; background: var(--panel); font: 600 0.95rem var(--display); letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  #crosshair { position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: rgba(255,255,255,0.8); box-shadow: 0 0 0 1px rgba(0,0,0,0.35); }
+
+  /* Editor de casas */
+  #editor {
+    position: fixed; z-index: 8; right: 16px; top: 50%; transform: translateY(-50%);
+    width: min(360px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow-y: auto;
+    padding: 0.9rem 1rem 1rem; background: rgba(13,27,44,0.92); border-top: 4px solid var(--yellow);
+    display: grid; gap: 0.7rem; backdrop-filter: blur(8px);
+  }
+  #editor h2 { margin: 0; font: 700 1.25rem/1.1 var(--display); letter-spacing: 0.02em; text-transform: uppercase; }
+  #editor .sub { margin: -0.4rem 0 0; font-size: 0.8rem; color: var(--muted); }
+  #editor .campo { display: grid; gap: 0.35rem; }
+  #editor .campo > span { font: 600 0.8rem/1 var(--display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  #editor .opciones { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  #editor .opciones button {
+    min-height: 32px; padding: 0 0.7rem; border: 1px solid var(--line); border-radius: 4px; cursor: pointer;
+    background: rgba(255,255,255,0.06); color: var(--ink); font: 600 0.9rem var(--display); letter-spacing: 0.04em;
+  }
+  #editor .opciones button.muestra { width: 32px; padding: 0; border: 2px solid rgba(255,255,255,0.25); color: var(--ink); }
+  #editor .opciones button[aria-pressed="true"] { outline: 3px solid var(--yellow); outline-offset: 1px; }
+  #editor input[type="color"] { width: 40px; height: 32px; padding: 0; border: 1px solid var(--line); border-radius: 4px; background: none; cursor: pointer; }
+  #editor label.check { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; margin-right: 1rem; }
+  #editor .acciones { display: flex; flex-wrap: wrap; gap: 8px; }
+  #editor .acciones button { flex: 1 1 auto; min-height: 38px; border: 0; border-radius: 4px; cursor: pointer; font: 700 0.95rem var(--display); letter-spacing: 0.06em; text-transform: uppercase; }
+  #ed-listo { background: var(--yellow); color: var(--navy); }
+  #ed-reset, #ed-copiar { background: rgba(255,255,255,0.1); color: var(--ink); }
+  #ed-estado, #ed-cuantas { margin: 0; font-size: 0.8rem; color: var(--muted); }
+  #ed-json { width: 100%; height: 90px; font: 12px/1.3 ui-monospace, monospace; background: #0a1522; color: var(--ink); border: 1px solid var(--line); }
+  @media (max-width: 640px) { #editor { top: auto; bottom: 8px; transform: none; max-height: 60vh; } }
+
+  /* Controles táctiles */
+  #touch { position: fixed; inset: 0; z-index: 6; touch-action: none; }
+  #stick { position: absolute; width: 100px; height: 100px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.35); background: rgba(13,27,44,0.3); opacity: 0; }
+  #stick.on { opacity: 1; }
+  #knob { position: absolute; left: 30px; top: 30px; width: 40px; height: 40px; border-radius: 50%; background: rgba(242,178,27,0.85); }
+  .tbtns { position: absolute; right: 16px; bottom: calc(110px + env(safe-area-inset-bottom, 0px)); display: grid; grid-template-columns: repeat(3, 60px); gap: 10px; }
+  .tbtns button {
+    width: 60px; height: 60px; padding: 0; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4);
+    background: var(--panel); color: var(--ink); font: 700 0.72rem var(--display); letter-spacing: 0.03em; text-transform: uppercase;
+  }
+  .tbtns button[aria-pressed="true"] { background: var(--yellow); color: var(--navy); }
+  .tbtns #btn-auto { background: var(--yellow); color: var(--navy); }
+
+  @media (max-width: 640px) {
+    #minimap { width: 120px; height: 120px; }
+    .zonecard { max-width: calc(100vw - 32px - 136px); }
+    #calle { font-size: 1.05rem; }
+    #help { display: none; }
+    #vel-num { font-size: 2.2rem; }
+    #overlay { background: linear-gradient(180deg, rgba(13,27,44,0.92) 0%, rgba(13,27,44,0.84) 70%, rgba(13,27,44,0.5) 100%); }
+    .keys { display: none; }
+  }
+  /* Celular acostado: minimapa más chico y botones abajo. */
+  @media (max-height: 520px) {
+    #minimap { width: 110px; height: 110px; }
+    .zonecard { max-width: calc(100vw - 32px - 126px); padding: 0.4rem 0.7rem; }
+    #calle { font-size: 1rem; }
+    .tbtns { bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+    #vel { bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+    #vel-num { font-size: 2rem; }
+  }
+  @media (pointer: coarse) { .keys, #help { display: none; } #vel { right: 50%; transform: translateX(50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); } #aviso { bottom: calc(190px + env(safe-area-inset-bottom, 0px)); } }
+  @media (pointer: fine) { .touch-note { display: none; } }
+  @media (prefers-reduced-motion: reduce) { #load::before { animation: none; } button.primary { transition: none; } }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<section id="overlay" aria-label="Inicio">
+  <div class="card">
+    <div class="eyebrow">Juriquilla · Querétaro</div>
+    <h1>Cumbres <span>del Lago</span></h1>
+    <p class="lede">Las calles, el relieve, el lago y <b>cada casa en su lugar y con su forma real</b>, tomadas de datos satelitales. Camina por la Pista Cumbres, súbete a cualquier auto estacionado y date la vuelta por el circuito Lago de Pátzcuaro. Si una casa no se parece, párate enfrente y presiona <kbd>P</kbd> para dejarla como es.</p>
+    <ul class="keys">
+      <li><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><span>Caminar / manejar</span></li>
+      <li><kbd>F</kbd><span>Subir o bajar del auto</span></li>
+      <li><kbd>Shift</kbd><span>Correr / turbo</span></li>
+      <li><kbd>Espacio</kbd><span>Saltar / freno de mano</span></li>
+      <li><kbd>C</kbd><span>Cámara del auto</span></li>
+      <li><kbd>B</kbd><span>Claxon</span></li>
+      <li><kbd>V</kbd><span>Volar</span></li>
+      <li><kbd>M</kbd><span>Mapa grande</span></li>
+      <li><kbd>P</kbd><span>Editar la casa de enfrente</span></li>
+    </ul>
+    <p class="touch-note">En celular: arrastra el lado izquierdo para caminar o manejar y el derecho para mirar. El botón amarillo sube y baja del auto.</p>
+    <div id="load"><span id="load-status">Preparando…</span></div>
+    <button id="enter" class="primary" hidden>Entrar a Cumbres</button>
+    <p class="fuente">Casas: Microsoft y Google Open Buildings. Calles: OpenStreetMap. Vía Overture Maps. Relieve: AWS Terrain Tiles.</p>
+  </div>
+</section>
+
+<div id="hud" hidden>
+  <div id="crosshair"></div>
+  <div class="zonecard">
+    <div id="calle">Cumbres del Lago</div>
+    <div id="zona">Cumbres del Lago · Juriquilla</div>
+    <div class="meta"><span id="alt">— msnm</span><span id="rumbo">N 000°</span></div>
+  </div>
+  <canvas id="minimap" width="360" height="360" aria-label="Minimapa"></canvas>
+  <div id="vel" hidden><span id="vel-num">0</span><small>km/h</small></div>
+  <div id="aviso" hidden></div>
+  <div id="help">
+    <div id="ayuda-pie"><b>WASD</b> caminar · <b>Shift</b> correr · <b>Espacio</b> saltar · <b>F</b> subir al auto · <b>V</b> volar · <b>P</b> editar la casa de enfrente</div>
+    <div id="ayuda-auto" hidden><b>W/S</b> acelerar y frenar · <b>A/D</b> volante · <b>Espacio</b> freno de mano · <b>C</b> cámara · <b>B</b> claxon · <b>F</b> bajar</div>
+    <div><b>M</b> mapa · <b>R</b> reiniciar · <b>N</b> sonido · <b>H</b> ocultar ayuda</div>
+  </div>
+  <div id="hint-lock" hidden>Haz clic para mirar con el mouse · Esc para soltar</div>
+</div>
+
+<section id="editor" hidden aria-label="Editar casa">
+  <h2 id="ed-titulo">Casa</h2>
+  <p class="sub">Déjala como es en la vida real. Se guarda en este navegador.</p>
+  <div class="campo"><span>Muros</span><div class="opciones" id="ed-muro" data-campo="muro"></div>
+    <div class="opciones"><input type="color" id="ed-muro-libre" aria-label="Otro color de muros"><small class="sub">Otro color</small></div></div>
+  <div class="campo" id="ed-fila-acento"><span>Panel de fachada</span><div class="opciones" id="ed-acento" data-campo="acento"></div></div>
+  <div class="campo"><span>Pisos</span><div class="opciones" id="ed-pisos" data-campo="pisos"></div></div>
+  <div class="campo" id="ed-fila-cochera"><span>Cochera (vista desde la calle)</span><div class="opciones" id="ed-cochera" data-campo="cochera"></div></div>
+  <div class="campo" id="ed-fila-porton"><span>Portón</span><div class="opciones" id="ed-porton" data-campo="porton"></div>
+    <div class="opciones"><input type="color" id="ed-porton-libre" aria-label="Otro color de portón"><small class="sub">Otro color</small></div></div>
+  <div class="campo"><span>Azotea</span><div class="opciones" id="ed-azotea" data-campo="azotea"></div></div>
+  <div class="campo" id="ed-fila-extras"><span>Detalles</span><div>
+    <label class="check"><input type="checkbox" id="ed-volado"> Volado sobre la cochera</label>
+    <label class="check"><input type="checkbox" id="ed-ventanal"> Ventanal</label></div></div>
+  <div class="acciones">
+    <button type="button" id="ed-listo">Listo</button>
+    <button type="button" id="ed-reset">Como estaba</button>
+    <button type="button" id="ed-copiar">Copiar cambios</button>
+  </div>
+  <p id="ed-cuantas"></p>
+  <p id="ed-estado" role="status"></p>
+  <textarea id="ed-json" hidden readonly aria-label="Cambios para copiar"></textarea>
+</section>
+
+<div id="touch" hidden>
+  <div id="stick"><div id="knob"></div></div>
+  <div class="tbtns">
+    <button id="btn-fly" aria-pressed="false">Volar</button>
+    <button id="btn-casa">Casa</button>
+    <button id="btn-horn">Claxon</button>
+    <button id="btn-auto">Auto</button>
+    <button id="btn-a" aria-pressed="false">Correr</button>
+    <button id="btn-b">Saltar</button>
+  </div>
+</div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

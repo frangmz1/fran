@@ -1,5 +1,8 @@
 # Sun Hills Valley 3D
 
+> En este repo también está **[Cumbres del Lago 3D](cumbres/)**: la colonia de
+> Juriquilla con sus casas reales, para caminar y manejar.
+
 Mapa 3D de la preparatoria Sun Hills Valley (carretera QRO 20, Querétaro),
 hecho con [three.js](https://threejs.org/). Se juega en el navegador.
 
